@@ -3,7 +3,7 @@
 use \App\Controllers\UsersController;
 use App\Http\Router;
 
-//ROTA SOBRE
+//ROTA USERS
 $router->middlewares(['jwtAuth'])->group("/api/users", function(Router &$router) {
     $usersController = new UsersController;
 
