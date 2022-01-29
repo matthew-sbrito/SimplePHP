@@ -91,6 +91,39 @@ class Router
         return count($middlewares) ? $middlewares : NULL;
     }
 
+    public function group(string $prefix, callable $callback){
+        $middlewares = $this->getMiddlewares();
+        
+        $router = new Router('');
+        $callback($router);
+  
+        foreach($router->routes as $uri => $route) {
+            foreach ($route as $method => $params) {
+                $params['middlewares'] = $middlewares;
+                $endpoint = $this->generateUri($prefix, $uri);
+                $this->routes[$endpoint][$method] = $params;
+            }
+        }
+
+        echo '<pre>';
+        print_r($this->routes);
+        echo '<br>';
+        echo '</pre>';exit;
+    }
+
+    private function generateUri(string $prefix, string $uri) {
+        
+        $initial = substr($uri, 0, 2);
+        $uri     = substr($uri, 3, strlen($uri));
+        $prefix  = str_replace('/','\/',$prefix);
+        
+        if($uri == "/"){
+            return $initial . $prefix . "$/";
+        }
+
+        return $initial . $prefix . '\\' . $uri;
+    }
+
     private function setMiddlewaresInRoute(&$params)
     {
         $middlewares = $this->getMiddlewares();

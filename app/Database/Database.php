@@ -95,6 +95,20 @@ class Database{
     }
   }
 
+  public function beginTransaction(){
+    $this->connection->setAttribute(PDO::ATTR_AUTOCOMMIT, 0);
+    $this->connection->beginTransaction();
+  }
+
+  public function commit(){
+    $this->connection->commit();
+  }
+
+  public function rollback(){
+    $this->connection->rollback();
+  }
+
+
   /**
    * Método responsável por executar queries dentro do banco de dados
    * @param  string $query
@@ -109,30 +123,10 @@ class Database{
     }catch(PDOException $e){
       switch($e->getCode()) {
         case 23000:
-          throw new \Exception('Dados já existentes!');
+          throw new \Exception('Database Error: Dados já existentes!');
         default:
-          die('ERROR: '.$e->getMessage());
+          throw new \Exception('Database Error: '.$e->getMessage());
       }
-    }
-  }
-
-   /**
-   * Método responsável por executar queries dentro do banco de dados
-   * @param  string $query
-   * @param  array  $params
-   * @return PDOStatement
-   */
-  public function executeSelect($query,$params = []){
-    $params = self::getValuesOfObjects($params);    
-    try{
-      $statement = $this->connection->prepare($query);
-      $statement->execute($params);
-    
-      $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-      return $result;
-
-    }catch(PDOException $e){
-      die('ERROR: '.$e->getMessage());
     }
   }
 
@@ -142,41 +136,21 @@ class Database{
    * @return integer ID inserido
    */
   public function insert($values){
+    $values = self::objectToArray($values);
     
-    $values = self::getValuesOfObjects($values);
     //DADOS DA QUERY
     $fields = array_keys($values);
     $binds  = array_pad([],count($fields),'?');
 
     //MONTA A QUERY
     $query = 'INSERT INTO '.$this->table.' ('.implode(',',$fields).') VALUES ('.implode(',',$binds).')';
-    // return $query;
+
     //EXECUTA O INSERT
     $result = $this->execute($query,array_values($values));
 
-    // RETORNA MENSAGEM  
-    if($result->rowCount() > 0){
-        return true;
-    }
+    // RETORNA O ID  
+    return $this->connection->lastInsertId();
 
-  }
-
-  public function findRelations($where = null, $join = null,$order = null, $limit = null, $fields = '*'){
-    //DADOS DA QUERY
-    $where = strlen($where) ? 'WHERE '.$where : '';
-    $join = strlen($join) ? 'LEFT JOIN '.$join : '';
-    $order = strlen($order) ? 'ORDER BY '.$order : '';
-    $limit = strlen($limit) ? 'LIMIT '.$limit : '';
-
-    //MONTA A QUERY
-    $query = 'SELECT '.$fields.' FROM '.$this->table.' '. $join .' '.$where.' '.$order.' '.$limit;
-    // return $query;
-
-    //EXECUTA A QUERY
-    $result = $this->execute($query);
-    while($finalResult = $result->fetchAll(PDO::FETCH_ASSOC)){
-        return $finalResult;
-    }
   }
 
   /**
@@ -213,7 +187,8 @@ class Database{
    * @return boolean
    */
   public function update($where,$values){
-    $values = self::getValuesOfObjects($values);
+    $values = self::objectToArray($values);
+
     //DADOS DA QUERY
     $fields = array_keys($values);
 
@@ -243,7 +218,8 @@ class Database{
     //RETORNA SUCESSO
     return true;
   }
-  private static function getValuesOfObjects($object){
+
+  private static function objectToArray($object){
     if(!is_object($object)) return $object;
     foreach($object as $key => $value){
       $array[$key] = $value;

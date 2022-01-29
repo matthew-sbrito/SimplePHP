@@ -72,31 +72,39 @@ class Request{
     }
 
     public function download(): self {
-        $this->getRouter()->setContentType("application/oct-stream");
+        $this->contentType = "application/oct-stream";
+        $this->getRouter()->setContentType($this->contentType);
         return $this;
     }
 
     public function json(): self {
-        $this->getRouter()->setContentType("application/json");
+        $this->contentType = "application/json";
+        $this->getRouter()->setContentType($this->contentType);
         return $this;
     }
     
     public function pdf(): self {
-        $this->getRouter()->setContentType("application/pdf");
+        $this->contentType = "application/pdf";
+        $this->getRouter()->setContentType($this->contentType);
         return $this;
     }
     
     public function html(): self {
-        $this->getRouter()->setContentType("text/html");
+        $this->contentType = "text/html";
+        $this->getRouter()->setContentType($this->contentType);
         return $this;
     }
     
     public function xml(): self {
-        $this->getRouter()->setContentType("text/xml");
+        $this->contentType = "text/xml";
+        $this->getRouter()->setContentType($this->contentType);
         return $this;
     }
 
     public function httpResponse(int $code, $content) {
+        if($code >= 400){
+            throw new ResponseException($content, $code);
+        }
         return new Response($code, $content, $this->contentType);
     }
 
@@ -111,23 +119,23 @@ class Request{
     public function noContent($content){
         return $this->httpResponse(204, $content);
     }
-
+    
     public function unauthorized(string $message = ""){
-        throw new ResponseException($message, 401);
+        return $this->httpResponse(401, $message);
     }
     
     public function forbidden(string $message = ""){
-        throw new ResponseException($message, 401);
+        return $this->httpResponse(403, $message);
     }
 
     public function notFound(string $message = ""){
-        throw new ResponseException($message, 404);
+        return $this->httpResponse(404, $message);
     }
     public function conflict(string $message = ""){
-        throw new ResponseException($message, 409);
+        return $this->httpResponse(409, $message);
     }
     public function serverError(string $message = ""){
-        throw new ResponseException($message, 500);
+        return $this->httpResponse(500, $message);
     }
 
     /** 

@@ -2,15 +2,16 @@
 
 namespace App\Controllers;
 
-use App\Database\Pagination;
 use App\Http\Request;
+
 use App\Models\User;
 use App\Repositories\UserRepository;
+
+use App\Database\Pagination;
 use App\Utils\ControllerApi;
 
 class UsersController extends ControllerApi {
 
-  
   private UserRepository $repository;
 
   public function __construct() {
@@ -20,7 +21,7 @@ class UsersController extends ControllerApi {
   public function find(Request $request)
   {
     $queryParams = $request->getQueryParams();
-    
+
     $currentPage  = $queryParams['page'] ?? 1;
     $size         = $queryParams['size'] ?? 10;
     $results      = $this->repository->count(); 
